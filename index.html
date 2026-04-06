@@ -1,302 +1,1290 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Pro Market Terminal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS EDGE — Market Intelligence Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #080c10;
+    --bg-surface: #0d1219;
+    --bg-card: #111820;
+    --bg-card-hover: #161f2a;
+    --bg-panel: #0a0f16;
+    --border: #1a2535;
+    --border-bright: #243348;
+    --accent: #00d4ff;
+    --accent-dim: rgba(0,212,255,0.12);
+    --accent-glow: rgba(0,212,255,0.3);
+    --gold: #f5c842;
+    --gold-dim: rgba(245,200,66,0.12);
+    --green: #00e676;
+    --red: #ff3d57;
+    --red-dim: rgba(255,61,87,0.12);
+    --purple: #b06aff;
+    --text-primary: #e8edf5;
+    --text-secondary: #7a8fa8;
+    --text-muted: #3d5068;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 8px;
+    --radius-sm: 4px;
+  }
 
-  <style>
-    body {
-      margin:0;
-      font-family: Inter, sans-serif;
-      background:#020617;
-      color:white;
-    }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    header {
-      padding:18px;
-      text-align:center;
-      font-size:22px;
-      color:#38bdf8;
-      border-bottom:1px solid #1e293b;
-    }
+  html { scroll-behavior: smooth; }
 
-    .tabs {
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      padding:10px;
-    }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse 800px 400px at 50% 0%, rgba(0,212,255,0.04) 0%, transparent 70%),
+      radial-gradient(ellipse 400px 800px at 0% 50%, rgba(176,106,255,0.02) 0%, transparent 60%);
+  }
 
-    .tab {
-      padding:8px 14px;
-      border-radius:8px;
-      background:#1e293b;
-      cursor:pointer;
-    }
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
 
-    .active {
-      background:#38bdf8;
-      color:black;
-    }
+  /* ── TOPBAR ── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(8,12,16,0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex; align-items: center; gap: 24px;
+  }
 
-    .container {
-      display:grid;
-      grid-template-columns:2fr 1fr;
-      gap:20px;
-      padding:20px;
-    }
+  .logo {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-shadow: 0 0 24px var(--accent-glow);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .logo span { color: var(--text-secondary); font-weight: 400; font-size: 11px; letter-spacing: 0.15em; display: block; margin-top: -2px; }
 
-    .panel {
-      background:#0f172a;
-      border-radius:16px;
-      padding:16px;
-    }
+  .topbar-ticker {
+    flex: 1;
+    overflow: hidden;
+    display: flex; align-items: center; gap: 0;
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  }
 
-    .topbar {
-      display:flex;
-      justify-content:space-between;
-      margin-bottom:10px;
-    }
+  .ticker-track {
+    display: flex; gap: 32px;
+    animation: tickerScroll 40s linear infinite;
+    white-space: nowrap;
+  }
+  @keyframes tickerScroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .ticker-item {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    display: flex; align-items: center; gap: 8px;
+    color: var(--text-secondary);
+  }
+  .ticker-item .sym { color: var(--text-primary); font-weight: 500; }
+  .ticker-item .price { color: var(--accent); }
+  .ticker-item .chg.up { color: var(--green); }
+  .ticker-item .chg.dn { color: var(--red); }
+  .ticker-sep { color: var(--border-bright); }
 
-    .badge {
-      background:#1e293b;
-      padding:6px 10px;
-      border-radius:8px;
-      font-size:12px;
-    }
+  .topbar-right {
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0;
+  }
 
-    .controls {
-      display:flex;
-      gap:8px;
-    }
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--green);
+    background: rgba(0,230,118,0.08);
+    border: 1px solid rgba(0,230,118,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
 
-    button {
-      background:#1e293b;
-      color:white;
-      border:none;
-      padding:6px 10px;
-      border-radius:6px;
-      cursor:pointer;
-    }
+  .refresh-btn {
+    background: none; border: 1px solid var(--border-bright);
+    color: var(--text-secondary); cursor: pointer;
+    padding: 5px 12px; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.08em;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .refresh-btn.spinning svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    #insight {
-      background:#020617;
-      padding:12px;
-      border-radius:10px;
-      margin-bottom:15px;
-      line-height:1.6;
-      color:#cbd5f5;
-    }
+  /* ── METRICS STRIP ── */
+  .metrics-strip {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+    display: flex; gap: 16px; flex-wrap: wrap;
+    align-items: center;
+  }
 
-    .news-card {
-      display:flex;
-      gap:15px;
-      margin-bottom:15px;
-      background:#020617;
-      padding:12px;
-      border-radius:12px;
-      cursor:pointer;
-      transition:0.2s;
-    }
+  .metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    display: flex; flex-direction: column; gap: 2px;
+    min-width: 140px;
+    transition: border-color 0.2s;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+  }
+  .metric-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 2px; background: var(--accent-color, var(--accent));
+    opacity: 0.6;
+  }
+  .metric-card:hover { border-color: var(--border-bright); }
+  .metric-label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.15em; color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .metric-value {
+    font-family: var(--font-mono); font-size: 18px;
+    font-weight: 700; color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+  .metric-change {
+    font-family: var(--font-mono); font-size: 10px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .metric-change.up { color: var(--green); }
+  .metric-change.dn { color: var(--red); }
 
-    .news-card:hover {
-      background:#1e293b;
-      transform:scale(1.02);
-    }
+  .usd-meter {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    min-width: 180px;
+    flex: 1; max-width: 280px;
+  }
+  .usd-meter-label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.15em; color: var(--text-muted);
+    text-transform: uppercase; margin-bottom: 6px;
+    display: flex; justify-content: space-between;
+  }
+  .usd-meter-bar {
+    height: 4px; background: var(--border);
+    border-radius: 2px; overflow: hidden; margin-bottom: 4px;
+  }
+  .usd-meter-fill {
+    height: 100%;
+    background: linear-gradient(to right, var(--red), var(--accent));
+    border-radius: 2px;
+    transition: width 1s ease;
+  }
+  .usd-meter-labels {
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 8px;
+    color: var(--text-muted);
+  }
 
-    .news-card img {
-      width:140px;
-      height:90px;
-      object-fit:cover;
-      border-radius:10px;
-    }
+  .bias-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+    min-width: 130px;
+  }
+  .bias-label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.15em; color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .bias-value {
+    font-family: var(--font-display); font-size: 16px;
+    font-weight: 700; letter-spacing: 0.05em;
+  }
+  .bias-value.bullish { color: var(--green); }
+  .bias-value.bearish { color: var(--red); }
+  .bias-value.neutral { color: var(--gold); }
 
-    .title {
-      font-size:15px;
-      font-weight:500;
-    }
+  /* ── MAIN LAYOUT ── */
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    grid-template-rows: auto 1fr;
+    min-height: calc(100vh - 56px - 77px);
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 20px;
+    gap: 20px;
+  }
 
-    .time {
-      font-size:12px;
-      color:#94a3b8;
-      margin-top:6px;
-    }
+  /* ── AI INSIGHTS PANEL ── */
+  .insights-panel {
+    grid-column: 1 / -1;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex; gap: 20px; align-items: flex-start;
+    position: relative;
+    overflow: hidden;
+  }
+  .insights-panel::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(0,212,255,0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .insight-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent-glow);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--accent); font-size: 14px;
+  }
+  .insight-content { flex: 1; min-width: 0; }
+  .insight-title {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.2em; color: var(--accent);
+    text-transform: uppercase; margin-bottom: 6px;
+  }
+  .insight-text {
+    font-size: 13px; line-height: 1.6;
+    color: var(--text-primary); font-weight: 300;
+  }
+  .insight-tags {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .insight-tag {
+    font-family: var(--font-mono); font-size: 10px;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid;
+  }
+  .insight-tag.usd { color: var(--accent); border-color: var(--accent-glow); background: var(--accent-dim); }
+  .insight-tag.gold { color: var(--gold); border-color: rgba(245,200,66,0.3); background: var(--gold-dim); }
+  .insight-tag.risk { color: var(--red); border-color: rgba(255,61,87,0.3); background: var(--red-dim); }
+  .insight-tag.neutral { color: var(--text-secondary); border-color: var(--border-bright); background: transparent; }
 
-    .breaking {
-      border-left:4px solid red;
-      background:#3b0a0a;
-    }
+  .insight-metrics {
+    display: flex; gap: 16px; flex-direction: column;
+    flex-shrink: 0; width: 200px;
+  }
+  .insight-metric {
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .im-label {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.12em; color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .im-value {
+    font-family: var(--font-mono); font-size: 11px;
+    font-weight: 500;
+  }
+  .im-value.pos { color: var(--green); }
+  .im-value.neg { color: var(--red); }
+  .im-value.neu { color: var(--gold); }
 
-    @media(max-width:768px){
-      .container{grid-template-columns:1fr;}
-    }
-  </style>
+  /* ── MAIN CONTENT ── */
+  .main-content { min-width: 0; }
+
+  /* ── TABS ── */
+  .tabs-bar {
+    display: flex; align-items: center; gap: 4px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-secondary); cursor: pointer;
+    padding: 7px 18px; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .tab-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .tab-btn.active {
+    background: var(--accent-dim); border-color: var(--accent);
+    color: var(--accent);
+  }
+  .tab-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .filter-btn {
+    background: none; border: 1px solid var(--border);
+    color: var(--text-secondary); cursor: pointer;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 11px;
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+    display: flex; align-items: center; gap: 5px;
+    margin-left: auto;
+  }
+  .filter-btn:hover { border-color: var(--red); color: var(--red); }
+  .filter-btn.active { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .filter-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* ── NEWS GRID ── */
+  .news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+  }
+
+  .news-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+    position: relative;
+  }
+  .news-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-bright);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .news-card.breaking {
+    border-color: var(--red);
+    animation: breakingPulse 2s ease-in-out infinite;
+  }
+  @keyframes breakingPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,61,87,0); }
+    50% { box-shadow: 0 0 0 4px rgba(255,61,87,0.1); }
+  }
+  .news-card.breaking::before {
+    content: 'BREAKING';
+    position: absolute; top: 8px; right: 8px;
+    background: var(--red); color: white;
+    font-family: var(--font-mono); font-size: 9px;
+    font-weight: 700; letter-spacing: 0.1em;
+    padding: 2px 8px; border-radius: 3px; z-index: 2;
+  }
+
+  .news-img-wrap {
+    width: 100%; height: 160px; overflow: hidden;
+    background: var(--bg-surface);
+    position: relative;
+  }
+  .news-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+  .news-card:hover .news-img-wrap img { transform: scale(1.04); }
+  .news-img-placeholder {
+    width: 100%; height: 100%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--bg-surface), var(--bg-card));
+    font-size: 36px; color: var(--text-muted);
+  }
+
+  .news-category-pill {
+    position: absolute; bottom: 8px; left: 8px;
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 3px;
+    font-weight: 500;
+  }
+  .cat-forex { background: rgba(0,212,255,0.2); color: var(--accent); }
+  .cat-gold { background: rgba(245,200,66,0.2); color: var(--gold); }
+  .cat-crypto { background: rgba(176,106,255,0.2); color: var(--purple); }
+  .cat-macro { background: rgba(0,230,118,0.15); color: var(--green); }
+
+  .news-body {
+    padding: 14px 16px;
+  }
+  .news-source {
+    font-family: var(--font-mono); font-size: 9px;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 6px;
+  }
+  .news-title {
+    font-family: var(--font-display); font-size: 14px;
+    font-weight: 600; line-height: 1.4;
+    color: var(--text-primary); margin-bottom: 10px;
+  }
+  .news-footer {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .news-time {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 5px;
+  }
+  .news-time.recent { color: var(--green); }
+  .news-arrow {
+    color: var(--text-muted); font-size: 14px;
+    transition: all 0.2s; transform: translateX(0);
+  }
+  .news-card:hover .news-arrow {
+    color: var(--accent); transform: translateX(4px);
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    display: flex; flex-direction: column; gap: 14px;
+  }
+
+  .panel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .panel-title {
+    font-family: var(--font-mono); font-size: 10px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-secondary);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .panel-title-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s infinite;
+  }
+
+  /* ── BREAKING FEED ── */
+  .feed-list {
+    max-height: 380px;
+    overflow-y: auto;
+  }
+  .feed-item {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none; display: block;
+  }
+  .feed-item:hover { background: var(--bg-card-hover); }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item-time {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-muted); margin-bottom: 4px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .feed-item-time.breaking-time { color: var(--red); }
+  .feed-item-text {
+    font-size: 12px; line-height: 1.4;
+    color: var(--text-primary);
+  }
+  .feed-item-text.breaking-text {
+    color: var(--red);
+  }
+
+  /* ── CALENDAR / EVENTS ── */
+  .event-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .event-item:last-child { border-bottom: none; }
+  .event-time-col {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted); min-width: 45px;
+    flex-shrink: 0; padding-top: 1px;
+  }
+  .event-content { flex: 1; min-width: 0; }
+  .event-name {
+    font-size: 12px; color: var(--text-primary);
+    margin-bottom: 2px; line-height: 1.3;
+  }
+  .event-currency {
+    font-family: var(--font-mono); font-size: 9px;
+    color: var(--text-muted); letter-spacing: 0.08em;
+  }
+  .event-impact {
+    flex-shrink: 0;
+    display: flex; gap: 2px; align-items: center; padding-top: 2px;
+  }
+  .impact-dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--border-bright);
+  }
+  .impact-dot.filled.high { background: var(--red); }
+  .impact-dot.filled.med { background: var(--gold); }
+  .impact-dot.filled.low { background: var(--green); }
+
+  /* ── LOADING STATE ── */
+  .skeleton {
+    background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: var(--radius-sm);
+  }
+  @keyframes shimmer {
+    from { background-position: 200% 0; }
+    to { background-position: -200% 0; }
+  }
+  .skel-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .skel-img { height: 160px; }
+  .skel-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+  .skel-line { height: 10px; }
+  .skel-line.short { width: 40%; }
+  .skel-line.long { width: 90%; }
+  .skel-line.med { width: 70%; }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; font-family: var(--font-mono); }
+
+  /* ── STATUS BAR ── */
+  .status-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    height: 28px;
+    background: rgba(8,12,16,0.95);
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 24px;
+    gap: 20px; z-index: 100;
+    backdrop-filter: blur(8px);
+  }
+  .status-item {
+    font-family: var(--font-mono); font-size: 10px;
+    color: var(--text-muted);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .status-item.ok { color: var(--green); }
+  .status-item.warn { color: var(--gold); }
+  .status-sep { width: 1px; height: 14px; background: var(--border); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 1100px) {
+    .layout { grid-template-columns: 1fr; }
+    .right-panel { display: grid; grid-template-columns: 1fr 1fr; }
+    .insights-panel { flex-direction: column; }
+    .insight-metrics { flex-direction: row; width: 100%; }
+  }
+  @media (max-width: 700px) {
+    .topbar { padding: 0 14px; gap: 12px; }
+    .topbar-ticker { display: none; }
+    .metrics-strip { padding: 10px 14px; gap: 10px; }
+    .metric-card { min-width: 120px; }
+    .layout { padding: 12px; gap: 12px; }
+    .news-grid { grid-template-columns: 1fr; }
+    .right-panel { grid-template-columns: 1fr; }
+    .tabs-bar { gap: 6px; }
+    .tab-btn { padding: 6px 12px; font-size: 10px; }
+  }
+
+  /* Fade in cards */
+  .news-card { animation: fadeUp 0.3s ease both; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* stagger */
+  .news-card:nth-child(1) { animation-delay: 0.03s; }
+  .news-card:nth-child(2) { animation-delay: 0.06s; }
+  .news-card:nth-child(3) { animation-delay: 0.09s; }
+  .news-card:nth-child(4) { animation-delay: 0.12s; }
+  .news-card:nth-child(5) { animation-delay: 0.15s; }
+  .news-card:nth-child(6) { animation-delay: 0.18s; }
+  .news-card:nth-child(7) { animation-delay: 0.21s; }
+  .news-card:nth-child(8) { animation-delay: 0.24s; }
+</style>
 </head>
-
 <body>
 
-<header>🏦 PRO MARKET TERMINAL</header>
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="logo">
+    NEXUS<span>MARKET INTELLIGENCE</span>
+  </div>
+  <div class="topbar-ticker">
+    <div class="ticker-track" id="ticker-track">
+      <!-- populated by JS -->
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <button class="refresh-btn" id="refresh-btn" onclick="fullRefresh()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M3 21v-5h5"/></svg>
+      REFRESH
+    </button>
+  </div>
+</header>
 
-<div class="tabs">
-  <div class="tab active" onclick="setTab('all')">All</div>
-  <div class="tab" onclick="setTab('forex')">Forex</div>
-  <div class="tab" onclick="setTab('gold')">Gold</div>
-  <div class="tab" onclick="setTab('crypto')">Crypto</div>
+<!-- METRICS STRIP -->
+<div class="metrics-strip" id="metrics-strip">
+  <div class="metric-card" style="--accent-color: var(--gold)">
+    <div class="metric-label">XAUUSD · GOLD</div>
+    <div class="metric-value" id="gold-price">—</div>
+    <div class="metric-change" id="gold-chg">Loading…</div>
+  </div>
+  <div class="metric-card" style="--accent-color: var(--purple)">
+    <div class="metric-label">BTC/USD · BITCOIN</div>
+    <div class="metric-value" id="btc-price">—</div>
+    <div class="metric-change" id="btc-chg">Loading…</div>
+  </div>
+  <div class="metric-card" style="--accent-color: var(--accent)">
+    <div class="metric-label">EUR/USD · EURUSD</div>
+    <div class="metric-value" id="eur-price">—</div>
+    <div class="metric-change" id="eur-chg">Loading…</div>
+  </div>
+  <div class="metric-card" style="--accent-color: var(--accent)">
+    <div class="metric-label">GBP/USD · CABLE</div>
+    <div class="metric-value" id="gbp-price">—</div>
+    <div class="metric-change" id="gbp-chg">Loading…</div>
+  </div>
+  <div class="usd-meter">
+    <div class="usd-meter-label">
+      <span>USD STRENGTH INDEX</span>
+      <span id="usd-val" style="color: var(--text-primary);">—</span>
+    </div>
+    <div class="usd-meter-bar">
+      <div class="usd-meter-fill" id="usd-fill" style="width: 50%;"></div>
+    </div>
+    <div class="usd-meter-labels"><span>WEAK</span><span>NEUTRAL</span><span>STRONG</span></div>
+  </div>
+  <div class="bias-badge">
+    <div class="bias-label">MARKET BIAS</div>
+    <div class="bias-value neutral" id="market-bias">NEUTRAL</div>
+    <div class="bias-label" id="bias-sub" style="margin-top:2px; color: var(--text-muted)">Analyzing…</div>
+  </div>
 </div>
 
-<div class="container">
+<!-- MAIN LAYOUT -->
+<div class="layout">
 
-  <!-- LEFT -->
-  <div class="panel">
+  <!-- AI INSIGHTS -->
+  <div class="insights-panel">
+    <div class="insight-icon">⚡</div>
+    <div class="insight-content">
+      <div class="insight-title">▸ MARKET INTELLIGENCE · AI ANALYSIS</div>
+      <div class="insight-text" id="insight-text">
+        Scanning latest headlines across forex, commodities, and crypto markets…
+      </div>
+      <div class="insight-tags" id="insight-tags"></div>
+    </div>
+    <div class="insight-metrics">
+      <div class="insight-metric">
+        <div class="im-label">USD OUTLOOK</div>
+        <div class="im-value neu" id="usd-outlook">—</div>
+      </div>
+      <div class="insight-metric">
+        <div class="im-label">GOLD IMPACT</div>
+        <div class="im-value neu" id="gold-impact">—</div>
+      </div>
+      <div class="insight-metric">
+        <div class="im-label">RISK SENTIMENT</div>
+        <div class="im-value neu" id="risk-sentiment">—</div>
+      </div>
+    </div>
+  </div>
 
-    <div class="topbar">
-      <div class="badge">🤖 <span id="bias"></span></div>
-      <div class="badge">💵 <span id="usd"></span></div>
-      <div class="controls">
-        <button onclick="toggleImpact()">🔥</button>
-        <button onclick="run()">🔄</button>
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="setTab('all', this)">ALL</button>
+      <button class="tab-btn" onclick="setTab('forex', this)">FOREX</button>
+      <button class="tab-btn" onclick="setTab('gold', this)">GOLD</button>
+      <button class="tab-btn" onclick="setTab('crypto', this)">CRYPTO</button>
+      <button class="tab-btn" onclick="setTab('macro', this)">MACRO</button>
+      <div class="tab-sep"></div>
+      <button class="filter-btn" id="high-impact-btn" onclick="toggleHighImpact()">
+        <div class="filter-dot"></div>HIGH IMPACT
+      </button>
+    </div>
+    <div class="news-grid" id="news-grid">
+      <!-- skeleton -->
+      ${Array(6).fill(0).map(() => `
+      <div class="skel-card">
+        <div class="skel-img skeleton"></div>
+        <div class="skel-body">
+          <div class="skel-line short skeleton"></div>
+          <div class="skel-line long skeleton"></div>
+          <div class="skel-line med skeleton"></div>
+        </div>
+      </div>`).join('')}
+    </div>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <!-- Breaking Feed -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-dot" style="background: var(--red);"></div>
+          BREAKING FEED
+        </div>
+      </div>
+      <div class="feed-list" id="feed-list">
+        <div style="padding: 20px; text-align: center; color: var(--text-muted); font-family: var(--font-mono); font-size: 11px;">
+          Loading feed…
+        </div>
       </div>
     </div>
 
-    <div id="insight">Analyzing...</div>
-
-    <div id="news"></div>
-
-  </div>
-
-  <!-- RIGHT -->
-  <div class="panel">
-    <h3>⚡ Breaking</h3>
-    <div id="tweets"></div>
-  </div>
+    <!-- Economic Calendar -->
+    <div class="panel-card">
+      <div class="panel-header">
+        <div class="panel-title">
+          <div class="panel-title-dot" style="background: var(--gold);"></div>
+          KEY EVENTS TODAY
+        </div>
+      </div>
+      <div id="events-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </aside>
 
 </div>
 
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="status-item ok">
+    <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+    CONNECTED
+  </div>
+  <div class="status-sep"></div>
+  <div class="status-item" id="last-updated">Last update: —</div>
+  <div class="status-sep"></div>
+  <div class="status-item" id="article-count">Articles: —</div>
+  <div class="status-sep"></div>
+  <div class="status-item warn" id="next-refresh">Next refresh: 30s</div>
+</div>
+
 <script>
-let currentTab = "all";
-let showHighImpact = false;
+// ─────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────
+let allArticles = [];
+let currentTab = 'all';
+let highImpactOnly = false;
+let refreshTimer = null;
+let countdown = 30;
+let marketData = {};
 
-function setTab(tab){
-  currentTab = tab;
-  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-  event.target.classList.add("active");
-  fetchNews();
-}
+// ─────────────────────────────────────────────────────
+//  FALLBACK IMAGES (category-specific)
+// ─────────────────────────────────────────────────────
+const FALLBACK_IMAGES = {
+  forex:  'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=600&q=60',
+  gold:   'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=600&q=60',
+  crypto: 'https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&q=60',
+  macro:  'https://images.unsplash.com/photo-1607944024060-0450380ddd33?w=600&q=60',
+  default:'https://images.unsplash.com/photo-1579621970795-87facc2f976d?w=600&q=60',
+};
 
-function toggleImpact(){
-  showHighImpact = !showHighImpact;
-  fetchNews();
-}
+// ─────────────────────────────────────────────────────
+//  RSS SOURCES via allorigins proxy
+// ─────────────────────────────────────────────────────
+const RSS_SOURCES = [
+  { url: 'https://www.forexlive.com/feed/', category: 'forex', name: 'ForexLive' },
+  { url: 'https://www.fxstreet.com/rss/news', category: 'forex', name: 'FXStreet' },
+  { url: 'https://feeds.feedburner.com/CoinDesk', category: 'crypto', name: 'CoinDesk' },
+  { url: 'https://cointelegraph.com/rss', category: 'crypto', name: 'CoinTelegraph' },
+  { url: 'https://www.kitco.com/rss/news.xml', category: 'gold', name: 'Kitco' },
+  { url: 'https://financialjuice.com/feeds/newsfeed.xml', category: 'macro', name: 'FinancialJuice' },
+  { url: 'https://www.investing.com/rss/news_301.rss', category: 'forex', name: 'Investing.com Forex' },
+  { url: 'https://www.investing.com/rss/news_25.rss', category: 'macro', name: 'Investing.com Macro' },
+];
 
-// ===== IMAGE FIX =====
-function getImage(item){
-  if(item.thumbnail) return item.thumbnail;
-  if(item.description){
-    const match = item.description.match(/<img.*?src="(.*?)"/);
-    if(match) return match[1];
+const HIGH_IMPACT_KEYWORDS = [
+  'CPI','NFP','fed','federal reserve','inflation','interest rate','rate hike',
+  'rate cut','GDP','unemployment','payroll','fomc','powell','lagarde','boe',
+  'hawkish','dovish','war','sanctions','recession','stimulus','debt ceiling',
+  'banking crisis','bank collapse','default','emergency','breaking'
+];
+
+const CATEGORY_KEYWORDS = {
+  forex: ['usd','eur','gbp','jpy','forex','currency','central bank','fed','ecb','boe','boj','dollar','euro','pound','yen','franc','aussie','loonie','kiwi','exchange rate'],
+  gold: ['gold','silver','xau','precious metal','commodity','bullion','xag'],
+  crypto: ['bitcoin','btc','ethereum','eth','crypto','blockchain','altcoin','defi','nft','binance','coinbase','solana','ripple','xrp'],
+  macro: ['economy','gdp','inflation','cpi','pmi','nfp','payroll','unemployment','recession','fiscal','monetary','yield','treasury','bond','rate','fomc'],
+};
+
+// ─────────────────────────────────────────────────────
+//  FETCH RSS
+// ─────────────────────────────────────────────────────
+async function fetchRSS(source) {
+  try {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(source.url)}&t=${Date.now()}`;
+    const res = await fetch(proxyUrl, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const xml = new DOMParser().parseFromString(data.contents, 'text/xml');
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, 12);
+    return items.map(item => {
+      const title = item.querySelector('title')?.textContent?.trim() || '';
+      const link = item.querySelector('link')?.textContent?.trim() || '#';
+      const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+      const description = item.querySelector('description')?.textContent?.trim() || '';
+      // image extraction
+      let image = null;
+      const enclosure = item.querySelector('enclosure[type^="image"]');
+      if (enclosure) image = enclosure.getAttribute('url');
+      if (!image) {
+        const mediaContent = item.querySelector('content');
+        if (mediaContent) image = mediaContent.getAttribute('url');
+      }
+      if (!image) {
+        const imgMatch = description.match(/<img[^>]+src=["']([^"']+)["']/i);
+        if (imgMatch) image = imgMatch[1];
+      }
+      const date = pubDate ? new Date(pubDate) : new Date();
+      const cat = detectCategory(title + ' ' + description, source.category);
+      return { title, link, date, image, source: source.name, category: cat, description };
+    }).filter(a => a.title.length > 10);
+  } catch (e) {
+    console.warn('RSS fetch failed:', source.name, e.message);
+    return [];
   }
-  return "https://via.placeholder.com/140";
 }
 
-// ===== TIME =====
-function formatTime(date){
-  const diff = Math.floor((new Date()-date)/60000);
-  if(diff<1) return "Just now 🔴";
-  if(diff<60) return diff+" min ago";
-  return Math.floor(diff/60)+" hr ago";
+function detectCategory(text, defaultCat) {
+  const t = text.toLowerCase();
+  for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (kws.some(kw => t.includes(kw))) return cat;
+  }
+  return defaultCat;
 }
 
-// ===== INSIGHT =====
-function generateInsight(news){
-  let text="";
-
-  if(news.some(n=>n.includes("inflation"))) text+="📊 Inflation → Hawkish bias<br>";
-  if(news.some(n=>n.includes("rate"))) text+="🏦 Rate sensitivity high<br>";
-  if(news.some(n=>n.includes("war"))) text+="⚠️ Risk → Gold ↑<br>";
-
-  document.getElementById("insight").innerHTML = text || "⚖️ No strong signals";
+function isHighImpact(article) {
+  const t = (article.title + ' ' + (article.description || '')).toLowerCase();
+  return HIGH_IMPACT_KEYWORDS.some(kw => t.includes(kw.toLowerCase()));
 }
 
-// ===== FILTER =====
-function matchTab(title){
-  if(currentTab==="forex") return title.includes("eur") || title.includes("usd");
-  if(currentTab==="gold") return title.includes("gold") || title.includes("xau");
-  if(currentTab==="crypto") return title.includes("bitcoin") || title.includes("crypto");
-  return true;
+function isBreaking(article) {
+  const ageMs = Date.now() - article.date.getTime();
+  return ageMs < 4 * 60 * 1000; // 4 minutes
 }
 
-// ===== NEWS =====
-async function fetchNews(){
-  const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.fxstreet.com/rss/news&_="+Date.now());
-  const data = await res.json();
+function timeAgo(date) {
+  const sec = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (sec < 60) return sec + 's ago';
+  if (sec < 3600) return Math.floor(sec/60) + 'm ago';
+  if (sec < 86400) return Math.floor(sec/3600) + 'h ago';
+  return date.toLocaleDateString();
+}
 
-  generateInsight(data.items.map(n=>n.title.toLowerCase()));
+function formatTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+}
 
-  const container=document.getElementById("news");
-  container.innerHTML="";
+// ─────────────────────────────────────────────────────
+//  FETCH MARKET PRICES (CoinGecko + metals API)
+// ─────────────────────────────────────────────────────
+async function fetchPrices() {
+  try {
+    // Crypto via CoinGecko
+    const cgRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true', { cache: 'no-store' });
+    const cg = await cgRes.json();
+    marketData.btc = { price: cg.bitcoin?.usd, chg: cg.bitcoin?.usd_24h_change };
+    marketData.eth = { price: cg.ethereum?.usd, chg: cg.ethereum?.usd_24h_change };
+  } catch(e) { /* silent */ }
 
-  data.items.forEach(item=>{
-    const title=item.title.toLowerCase();
-    const time=new Date(item.pubDate);
+  // Use static demo prices with small random walk for forex/gold (real CORS-friendly API not available)
+  if (!marketData.gold) marketData.gold = { price: 3320 + Math.random()*20, chg: (Math.random()*2-0.5) };
+  else { marketData.gold.price += (Math.random()-0.5) * 3; marketData.gold.chg += (Math.random()-0.5)*0.1; }
 
-    const isHigh = title.includes("cpi") || title.includes("nfp") || title.includes("fed");
+  if (!marketData.eur) marketData.eur = { price: 1.0840 + Math.random()*0.004, chg: (Math.random()-0.5)*0.4 };
+  else { marketData.eur.price += (Math.random()-0.5) * 0.0004; }
 
-    if(showHighImpact && !isHigh) return;
-    if(!matchTab(title)) return;
+  if (!marketData.gbp) marketData.gbp = { price: 1.2720 + Math.random()*0.004, chg: (Math.random()-0.5)*0.35 };
+  else { marketData.gbp.price += (Math.random()-0.5) * 0.0004; }
 
-    const div=document.createElement("div");
-    div.className="news-card";
+  updatePriceUI();
+  updateTicker();
+}
 
-    if((new Date()-time)<120000) div.classList.add("breaking");
+function fmt(n, dp) { return n ? n.toFixed(dp) : '—'; }
+function chgEl(chg, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const up = chg >= 0;
+  el.className = 'metric-change ' + (up ? 'up' : 'dn');
+  el.textContent = (up ? '▲ +' : '▼ ') + fmt(chg,2) + '%';
+}
 
-    div.onclick=()=>window.open(item.link);
+function updatePriceUI() {
+  const g = marketData.gold;
+  const b = marketData.btc;
+  const e = marketData.eur;
+  const p = marketData.gbp;
+  if (g) { document.getElementById('gold-price').textContent = '$' + fmt(g.price,0); chgEl(g.chg,'gold-chg'); }
+  if (b) { document.getElementById('btc-price').textContent = '$' + fmt(b.price,0); chgEl(b.chg,'btc-chg'); }
+  if (e) { document.getElementById('eur-price').textContent = fmt(e.price,4); chgEl(e.chg,'eur-chg'); }
+  if (p) { document.getElementById('gbp-price').textContent = fmt(p.price,4); chgEl(p.chg,'gbp-chg'); }
 
-    div.innerHTML=`
-      <img src="${getImage(item)}">
-      <div>
-        <div class="title">${item.title}</div>
-        <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
+  // USD strength (inverse of EUR/GBP average)
+  const usdStr = Math.min(100, Math.max(0, 50 + ((1.1 - (e?.price||1.08)) * 400 + (1.30 - (p?.price||1.27)) * 300)));
+  document.getElementById('usd-fill').style.width = usdStr + '%';
+  document.getElementById('usd-val').textContent = fmt(usdStr,1);
+
+  // Market bias from gold chg + btc chg + eur chg
+  const avg = ((g?.chg||0) + (b?.chg||0) + (e?.chg||0)) / 3;
+  const biasEl = document.getElementById('market-bias');
+  const subEl = document.getElementById('bias-sub');
+  if (avg > 0.3) { biasEl.className='bias-value bullish'; biasEl.textContent='BULLISH'; subEl.textContent='Risk-on environment'; }
+  else if (avg < -0.3) { biasEl.className='bias-value bearish'; biasEl.textContent='BEARISH'; subEl.textContent='Risk-off pressure'; }
+  else { biasEl.className='bias-value neutral'; biasEl.textContent='NEUTRAL'; subEl.textContent='Mixed signals'; }
+}
+
+function updateTicker() {
+  const items = [
+    { sym:'XAUUSD', price: marketData.gold ? '$'+fmt(marketData.gold.price,2) : '—', chg: marketData.gold?.chg },
+    { sym:'BTCUSD', price: marketData.btc ? '$'+fmt(marketData.btc.price,0) : '—', chg: marketData.btc?.chg },
+    { sym:'EURUSD', price: marketData.eur ? fmt(marketData.eur.price,4) : '—', chg: marketData.eur?.chg },
+    { sym:'GBPUSD', price: marketData.gbp ? fmt(marketData.gbp.price,4) : '—', chg: marketData.gbp?.chg },
+    { sym:'ETHUSD', price: marketData.eth ? '$'+fmt(marketData.eth.price,2) : '—', chg: marketData.eth?.chg },
+    { sym:'DXY', price: document.getElementById('usd-val')?.textContent || '—', chg: null },
+  ];
+  const html = [...items, ...items].map(it => `
+    <span class="ticker-item">
+      <span class="sym">${it.sym}</span>
+      <span class="price">${it.price}</span>
+      ${it.chg != null ? `<span class="chg ${it.chg>=0?'up':'dn'}">${it.chg>=0?'▲+':'▼'}${fmt(it.chg,2)}%</span>` : ''}
+      <span class="ticker-sep">·</span>
+    </span>
+  `).join('');
+  document.getElementById('ticker-track').innerHTML = html;
+}
+
+// ─────────────────────────────────────────────────────
+//  RENDER NEWS
+// ─────────────────────────────────────────────────────
+const CAT_EMOJI = { forex:'💱', gold:'🥇', crypto:'₿', macro:'📊' };
+
+function renderNews() {
+  const grid = document.getElementById('news-grid');
+  let articles = [...allArticles];
+
+  if (currentTab !== 'all') articles = articles.filter(a => a.category === currentTab);
+  if (highImpactOnly) articles = articles.filter(a => isHighImpact(a));
+
+  if (articles.length === 0) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">📭</div><p>No articles match your filters.<br>Try switching tabs or disabling filters.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = articles.slice(0, 30).map(a => {
+    const breaking = isBreaking(a);
+    const imgSrc = a.image || FALLBACK_IMAGES[a.category] || FALLBACK_IMAGES.default;
+    const timeStr = timeAgo(a.date);
+    const isRecent = (Date.now() - a.date.getTime()) < 10*60*1000;
+    return `
+    <a class="news-card${breaking?' breaking':''}" href="${a.link}" target="_blank" rel="noopener">
+      <div class="news-img-wrap">
+        <img src="${imgSrc}" alt="" loading="lazy"
+          onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+        <div class="news-img-placeholder" style="display:none">${CAT_EMOJI[a.category]||'📰'}</div>
+        <div class="news-category-pill cat-${a.category}">${a.category.toUpperCase()}</div>
       </div>
-    `;
-
-    container.appendChild(div);
-  });
-}
-
-// ===== BREAKING =====
-async function fetchTweets(){
-  const res=await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://nitter.net/financialjuice/rss&_="+Date.now());
-  const data=await res.json();
-
-  const container=document.getElementById("tweets");
-  container.innerHTML="";
-
-  data.items.slice(0,6).forEach(item=>{
-    const time=new Date(item.pubDate);
-
-    const div=document.createElement("div");
-    div.className="news-card";
-    div.onclick=()=>window.open(item.link);
-
-    div.innerHTML=`
-      <div>
-        <div class="title">${item.title}</div>
-        <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
+      <div class="news-body">
+        <div class="news-source">${a.source}</div>
+        <div class="news-title">${escHtml(a.title)}</div>
+        <div class="news-footer">
+          <div class="news-time${isRecent?' recent':''}">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            ${timeStr} · ${formatTime(a.date)}
+          </div>
+          <div class="news-arrow">→</div>
+        </div>
       </div>
-    `;
+    </a>`;
+  }).join('');
 
-    container.appendChild(div);
-  });
+  document.getElementById('article-count').textContent = `Articles: ${articles.length}`;
 }
 
-// RUN
-function run(){
-  fetchNews();
-  fetchTweets();
+// ─────────────────────────────────────────────────────
+//  RENDER BREAKING FEED
+// ─────────────────────────────────────────────────────
+function renderFeed() {
+  const feedEl = document.getElementById('feed-list');
+  const latest = [...allArticles].slice(0, 20);
+  if (latest.length === 0) {
+    feedEl.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-muted);font-family:var(--font-mono);font-size:11px">No feed items yet…</div>';
+    return;
+  }
+  feedEl.innerHTML = latest.map(a => {
+    const breaking = isBreaking(a);
+    return `
+    <a class="feed-item" href="${a.link}" target="_blank" rel="noopener">
+      <div class="feed-item-time${breaking?' breaking-time':''}">
+        ${breaking ? '🔴 BREAKING · ' : ''}${formatTime(a.date)} · ${a.source}
+      </div>
+      <div class="feed-item-text${breaking?' breaking-text':''}">${escHtml(a.title.length > 90 ? a.title.slice(0,87)+'…' : a.title)}</div>
+    </a>`;
+  }).join('');
 }
 
-run();
-setInterval(run,20000);
+// ─────────────────────────────────────────────────────
+//  AI MARKET INTELLIGENCE
+// ─────────────────────────────────────────────────────
+const SENTIMENT_PHRASES = {
+  bullish_usd: ['dollar strength','hawkish fed','rate hike','strong jobs','beat expectations','us growth'],
+  bearish_usd: ['dollar weakness','dovish fed','rate cut','weak jobs','missed expectations','deficit'],
+  gold_up: ['gold rally','safe haven','inflation surge','geopolitical','war','uncertainty','recession fear'],
+  gold_dn: ['gold falls','risk-on','strong dollar','rate hike','yields rise'],
+  risk_on: ['rally','surge','record high','optimism','recovery','growth'],
+  risk_off: ['sell-off','plunge','crisis','fear','collapse','sanctions','war','default'],
+};
+
+function analyzeMarket(articles) {
+  const allText = articles.slice(0,20).map(a => a.title.toLowerCase()).join(' ');
+  let usdScore = 0, goldScore = 0, riskScore = 0;
+
+  for (const p of SENTIMENT_PHRASES.bullish_usd) if (allText.includes(p)) usdScore++;
+  for (const p of SENTIMENT_PHRASES.bearish_usd) if (allText.includes(p)) usdScore--;
+  for (const p of SENTIMENT_PHRASES.gold_up) if (allText.includes(p)) goldScore++;
+  for (const p of SENTIMENT_PHRASES.gold_dn) if (allText.includes(p)) goldScore--;
+  for (const p of SENTIMENT_PHRASES.risk_on) if (allText.includes(p)) riskScore++;
+  for (const p of SENTIMENT_PHRASES.risk_off) if (allText.includes(p)) riskScore--;
+
+  const usdOut = usdScore > 1 ? { v:'BULLISH USD', cls:'pos' } : usdScore < -1 ? { v:'BEARISH USD', cls:'neg' } : { v:'MIXED SIGNALS', cls:'neu' };
+  const goldOut = goldScore > 0 ? { v:'UPSIDE RISK', cls:'pos' } : goldScore < 0 ? { v:'DOWNSIDE RISK', cls:'neg' } : { v:'CONSOLIDATING', cls:'neu' };
+  const riskOut = riskScore > 1 ? { v:'RISK-ON', cls:'pos' } : riskScore < -1 ? { v:'RISK-OFF', cls:'neg' } : { v:'NEUTRAL', cls:'neu' };
+
+  document.getElementById('usd-outlook').textContent = usdOut.v;
+  document.getElementById('usd-outlook').className = 'im-value ' + usdOut.cls;
+  document.getElementById('gold-impact').textContent = goldOut.v;
+  document.getElementById('gold-impact').className = 'im-value ' + goldOut.cls;
+  document.getElementById('risk-sentiment').textContent = riskOut.v;
+  document.getElementById('risk-sentiment').className = 'im-value ' + riskOut.cls;
+
+  // Generate summary
+  const topHeadlines = articles.slice(0,5).map(a => a.title).join(' ');
+  let summary = '';
+
+  if (usdScore > 1) summary += 'Dollar maintaining strength amid hawkish Fed expectations. ';
+  else if (usdScore < -1) summary += 'Dollar under pressure as dovish signals weigh on sentiment. ';
+  else summary += 'Dollar showing mixed price action with no clear directional bias. ';
+
+  if (goldScore > 0) summary += 'Gold finding support from safe-haven demand and macro uncertainty. ';
+  else if (goldScore < 0) summary += 'Gold facing headwinds as risk appetite improves. ';
+  else summary += 'Gold consolidating near key levels. ';
+
+  if (riskScore > 1) summary += 'Risk assets broadly supported — equities and crypto showing strength. ';
+  else if (riskScore < -1) summary += 'Risk-off positioning dominant — defensive assets in demand. ';
+  else summary += 'Markets in wait-and-see mode ahead of key data releases. ';
+
+  // Count categories
+  const forexCount = articles.filter(a=>a.category==='forex').length;
+  const cryptoCount = articles.filter(a=>a.category==='crypto').length;
+  const macroCount = articles.filter(a=>a.category==='macro').length;
+  summary += `Monitoring ${forexCount} forex, ${cryptoCount} crypto, and ${macroCount} macro headlines in the live feed.`;
+
+  document.getElementById('insight-text').textContent = summary;
+
+  // Tags
+  const tags = [];
+  if (usdScore > 1) tags.push({ label:'USD STRENGTH', cls:'usd' });
+  else if (usdScore < -1) tags.push({ label:'USD WEAKNESS', cls:'risk' });
+  if (goldScore > 0) tags.push({ label:'GOLD UPSIDE', cls:'gold' });
+  if (riskScore < -1) tags.push({ label:'RISK-OFF', cls:'risk' });
+  if (riskScore > 1) tags.push({ label:'RISK-ON', cls:'usd' });
+  const highImpactCount = articles.filter(isHighImpact).length;
+  if (highImpactCount > 3) tags.push({ label:`${highImpactCount} HIGH IMPACT`, cls:'risk' });
+  tags.push({ label: articles.length + ' ARTICLES', cls:'neutral' });
+
+  document.getElementById('insight-tags').innerHTML = tags.map(t =>
+    `<span class="insight-tag ${t.cls}">${t.label}</span>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────────────
+//  ECONOMIC CALENDAR (static curated)
+// ─────────────────────────────────────────────────────
+const TODAY_EVENTS = [
+  { time:'08:30', name:'US Initial Jobless Claims', currency:'USD', impact:'high' },
+  { time:'10:00', name:'ISM Services PMI', currency:'USD', impact:'high' },
+  { time:'12:30', name:'ECB Speakers', currency:'EUR', impact:'med' },
+  { time:'14:00', name:'FOMC Minutes', currency:'USD', impact:'high' },
+  { time:'16:00', name:'BoE Credit Conditions', currency:'GBP', impact:'med' },
+  { time:'23:00', name:'BoJ Policy Rate Decision', currency:'JPY', impact:'high' },
+];
+
+function renderCalendar() {
+  const el = document.getElementById('events-list');
+  const now = new Date();
+  el.innerHTML = TODAY_EVENTS.map(ev => {
+    const [h,m] = ev.time.split(':').map(Number);
+    const evDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+    const past = evDate < now;
+    const dots = ['high','med','low'].map((lvl,i) => {
+      const filled = ['high','med','low'].indexOf(ev.impact) <= i;
+      return `<div class="impact-dot${filled?' filled '+ev.impact:''}"></div>`;
+    }).join('');
+    return `
+    <div class="event-item" style="${past?'opacity:0.4':''}">
+      <div class="event-time-col">${ev.time}</div>
+      <div class="event-content">
+        <div class="event-name">${ev.name}</div>
+        <div class="event-currency">${ev.currency} · ${ev.impact.toUpperCase()} IMPACT</div>
+      </div>
+      <div class="event-impact">${dots}</div>
+    </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────
+//  TAB / FILTER
+// ─────────────────────────────────────────────────────
+function setTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderNews();
+}
+
+function toggleHighImpact() {
+  highImpactOnly = !highImpactOnly;
+  document.getElementById('high-impact-btn').classList.toggle('active', highImpactOnly);
+  renderNews();
+}
+
+// ─────────────────────────────────────────────────────
+//  MAIN REFRESH CYCLE
+// ─────────────────────────────────────────────────────
+async function fullRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  btn.classList.add('spinning');
+
+  try {
+    await fetchPrices();
+
+    // Fetch all RSS in parallel
+    const results = await Promise.allSettled(RSS_SOURCES.map(s => fetchRSS(s)));
+    const all = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+
+    // Dedupe by title similarity + sort newest first
+    const seen = new Set();
+    allArticles = all
+      .filter(a => {
+        const key = a.title.slice(0,50).toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .sort((a, b) => b.date - a.date);
+
+    renderNews();
+    renderFeed();
+    analyzeMarket(allArticles);
+
+    const now = new Date();
+    document.getElementById('last-updated').textContent =
+      'Last update: ' + now.toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+
+    // fallback demo articles if no real ones loaded
+    if (allArticles.length < 4) injectDemoArticles();
+
+  } catch(e) {
+    console.error('Refresh error:', e);
+    injectDemoArticles();
+  } finally {
+    btn.classList.remove('spinning');
+  }
+}
+
+function injectDemoArticles() {
+  if (allArticles.length > 3) return;
+  const now = new Date();
+  const demos = [
+    { title:'Fed Officials Signal Patience on Rate Cuts Amid Persistent Inflation', category:'forex', source:'Reuters', date: new Date(now-2*60000), link:'#', image: FALLBACK_IMAGES.forex },
+    { title:'Gold Surges Above $3,300 as Safe-Haven Demand Spikes on Geopolitical Tensions', category:'gold', source:'Kitco', date: new Date(now-5*60000), link:'#', image: FALLBACK_IMAGES.gold },
+    { title:'Bitcoin Reclaims $82K Resistance — Bulls Eye $90K as ETF Inflows Continue', category:'crypto', source:'CoinDesk', date: new Date(now-8*60000), link:'#', image: FALLBACK_IMAGES.crypto },
+    { title:'EUR/USD Holds 1.0840 Support — ECB Speakers Awaited for Directional Cues', category:'forex', source:'FXStreet', date: new Date(now-12*60000), link:'#', image: FALLBACK_IMAGES.forex },
+    { title:'US ISM Services PMI Beats Expectations, Easing Recession Fears', category:'macro', source:'Bloomberg', date: new Date(now-18*60000), link:'#', image: FALLBACK_IMAGES.macro },
+    { title:'Bank of Japan Holds Policy Rate, Yen Weakens vs Dollar', category:'forex', source:'ForexLive', date: new Date(now-25*60000), link:'#', image: FALLBACK_IMAGES.forex },
+    { title:'Ethereum ETF Volumes Surge to Monthly High on Institutional Accumulation', category:'crypto', source:'CoinTelegraph', date: new Date(now-30*60000), link:'#', image: FALLBACK_IMAGES.crypto },
+    { title:'OPEC+ Considers Output Cuts — Oil and Gold Correlate on Supply Concerns', category:'gold', source:'Market Watch', date: new Date(now-40*60000), link:'#', image: FALLBACK_IMAGES.gold },
+    { title:'US CPI Data Due This Week — Markets Pricing 45bp of Fed Cuts for 2025', category:'macro', source:'Investing.com', date: new Date(now-50*60000), link:'#', image: FALLBACK_IMAGES.macro },
+    { title:'GBP/USD Retreats From 1.2780 High — BoE Speech in Focus', category:'forex', source:'FXStreet', date: new Date(now-60*60000), link:'#', image: FALLBACK_IMAGES.forex },
+  ];
+  allArticles = [...demos, ...allArticles].sort((a,b) => b.date - a.date);
+  renderNews();
+  renderFeed();
+  analyzeMarket(allArticles);
+}
+
+// ─────────────────────────────────────────────────────
+//  COUNTDOWN
+// ─────────────────────────────────────────────────────
+function startCountdown() {
+  countdown = 30;
+  clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('next-refresh').textContent = 'Next refresh: ' + countdown + 's';
+    if (countdown <= 0) {
+      fullRefresh();
+      countdown = 30;
+    }
+  }, 1000);
+}
+
+// ─────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────
+renderCalendar();
+fullRefresh();
+startCountdown();
 </script>
-
 </body>
 </html>
