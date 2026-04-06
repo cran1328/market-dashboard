@@ -1,128 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Market Pro Terminal</title>
+  <title>Pro Market Terminal</title>
 
   <style>
     body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #020617;
-      color: white;
+      margin:0;
+      font-family: Inter, sans-serif;
+      background:#020617;
+      color:white;
     }
 
     header {
-      padding: 18px;
-      text-align: center;
-      font-size: 22px;
-      font-weight: bold;
-      color: #38bdf8;
-      border-bottom: 1px solid #1e293b;
+      padding:18px;
+      text-align:center;
+      font-size:22px;
+      color:#38bdf8;
+      border-bottom:1px solid #1e293b;
+    }
+
+    .tabs {
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      padding:10px;
+    }
+
+    .tab {
+      padding:8px 14px;
+      border-radius:8px;
+      background:#1e293b;
+      cursor:pointer;
+    }
+
+    .active {
+      background:#38bdf8;
+      color:black;
     }
 
     .container {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 18px;
-      padding: 18px;
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:20px;
+      padding:20px;
     }
 
     .panel {
-      background: #0f172a;
-      border-radius: 14px;
-      padding: 14px;
+      background:#0f172a;
+      border-radius:16px;
+      padding:16px;
     }
 
     .topbar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      font-size: 13px;
+      display:flex;
+      justify-content:space-between;
+      margin-bottom:10px;
     }
 
     .badge {
-      background: #1e293b;
-      padding: 6px 10px;
-      border-radius: 8px;
+      background:#1e293b;
+      padding:6px 10px;
+      border-radius:8px;
+      font-size:12px;
     }
 
-    .price-bar {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 12px;
-      flex-wrap: wrap;
-    }
-
-    .price-box {
-      background: #020617;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-    }
-
-    .card {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 12px;
-      background: #020617;
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-
-    .card:hover {
-      background: #1e293b;
-      transform: scale(1.02);
-    }
-
-    .breaking {
-      border-left: 4px solid red;
-      background: #3b0a0a;
-    }
-
-    .card img {
-      width: 120px;
-      height: 80px;
-      border-radius: 10px;
-      object-fit: cover;
-    }
-
-    .title {
-      font-size: 14px;
-    }
-
-    .time {
-      font-size: 11px;
-      color: #94a3b8;
-      margin-top: 5px;
-    }
-
-    #insight {
-      font-size: 14px;
-      line-height: 1.6;
-      color: #cbd5f5;
-      margin-bottom: 12px;
+    .controls {
+      display:flex;
+      gap:8px;
     }
 
     button {
-      background: #1e293b;
-      color: white;
-      border: none;
-      padding: 5px 8px;
-      border-radius: 6px;
-      margin-left: 5px;
+      background:#1e293b;
+      color:white;
+      border:none;
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
     }
 
-    @media (max-width: 768px) {
-      .container { grid-template-columns: 1fr; }
+    #insight {
+      background:#020617;
+      padding:12px;
+      border-radius:10px;
+      margin-bottom:15px;
+      line-height:1.6;
+      color:#cbd5f5;
+    }
+
+    .news-card {
+      display:flex;
+      gap:15px;
+      margin-bottom:15px;
+      background:#020617;
+      padding:12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition:0.2s;
+    }
+
+    .news-card:hover {
+      background:#1e293b;
+      transform:scale(1.02);
+    }
+
+    .news-card img {
+      width:140px;
+      height:90px;
+      object-fit:cover;
+      border-radius:10px;
+    }
+
+    .title {
+      font-size:15px;
+      font-weight:500;
+    }
+
+    .time {
+      font-size:12px;
+      color:#94a3b8;
+      margin-top:6px;
+    }
+
+    .breaking {
+      border-left:4px solid red;
+      background:#3b0a0a;
+    }
+
+    @media(max-width:768px){
+      .container{grid-template-columns:1fr;}
     }
   </style>
 </head>
 
 <body>
 
-<header>🚀 MARKET PRO TERMINAL</header>
+<header>🏦 PRO MARKET TERMINAL</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('all')">All</div>
+  <div class="tab" onclick="setTab('forex')">Forex</div>
+  <div class="tab" onclick="setTab('gold')">Gold</div>
+  <div class="tab" onclick="setTab('crypto')">Crypto</div>
+</div>
 
 <div class="container">
 
@@ -130,17 +149,15 @@
   <div class="panel">
 
     <div class="topbar">
-      <div class="badge">🤖 <span id="bias">...</span></div>
-      <div class="badge">💵 <span id="usd">...</span></div>
-      <div>
+      <div class="badge">🤖 <span id="bias"></span></div>
+      <div class="badge">💵 <span id="usd"></span></div>
+      <div class="controls">
         <button onclick="toggleImpact()">🔥</button>
-        <button onclick="refreshAll()">🔄</button>
+        <button onclick="run()">🔄</button>
       </div>
     </div>
 
-    <div id="insight">Analyzing market...</div>
-
-    <div class="price-bar" id="prices"></div>
+    <div id="insight">Analyzing...</div>
 
     <div id="news"></div>
 
@@ -148,113 +165,93 @@
 
   <!-- RIGHT -->
   <div class="panel">
-    <h3>⚡ Breaking Feed</h3>
+    <h3>⚡ Breaking</h3>
     <div id="tweets"></div>
   </div>
 
 </div>
 
 <script>
+let currentTab = "all";
 let showHighImpact = false;
 
-function toggleImpact() {
+function setTab(tab){
+  currentTab = tab;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  event.target.classList.add("active");
+  fetchNews();
+}
+
+function toggleImpact(){
   showHighImpact = !showHighImpact;
   fetchNews();
 }
 
-function refreshAll() {
-  fetchNews();
-  fetchTweets();
-  fetchPrices();
+// ===== IMAGE FIX =====
+function getImage(item){
+  if(item.thumbnail) return item.thumbnail;
+  if(item.description){
+    const match = item.description.match(/<img.*?src="(.*?)"/);
+    if(match) return match[1];
+  }
+  return "https://via.placeholder.com/140";
 }
 
-function formatTime(date) {
-  const diff = Math.floor((new Date() - date) / 60000);
-  if (diff < 1) return "Just now 🔴";
-  if (diff < 60) return diff + " min ago";
-  return Math.floor(diff/60) + " hr ago";
+// ===== TIME =====
+function formatTime(date){
+  const diff = Math.floor((new Date()-date)/60000);
+  if(diff<1) return "Just now 🔴";
+  if(diff<60) return diff+" min ago";
+  return Math.floor(diff/60)+" hr ago";
 }
 
-// ===== INSIGHT LOGIC =====
-function generateInsight(news) {
-  let text = "";
+// ===== INSIGHT =====
+function generateInsight(news){
+  let text="";
 
-  let inflation = 0, rates = 0, war = 0, usdUp = 0, usdDown = 0;
+  if(news.some(n=>n.includes("inflation"))) text+="📊 Inflation → Hawkish bias<br>";
+  if(news.some(n=>n.includes("rate"))) text+="🏦 Rate sensitivity high<br>";
+  if(news.some(n=>n.includes("war"))) text+="⚠️ Risk → Gold ↑<br>";
 
-  news.forEach(n => {
-    const t = n.toLowerCase();
-    if (t.includes("inflation")) inflation++;
-    if (t.includes("rate")) rates++;
-    if (t.includes("war")) war++;
-    if (t.includes("usd strength")) usdUp++;
-    if (t.includes("usd weakness")) usdDown++;
-  });
+  document.getElementById("insight").innerHTML = text || "⚖️ No strong signals";
+}
 
-  if (inflation) text += "📊 Inflation pressure → Hawkish bias.<br>";
-  if (rates) text += "🏦 Rate narrative active.<br>";
-  if (war) text += "⚠️ Risk → Gold demand ↑.<br>";
-  if (usdUp > usdDown) text += "💵 USD strong → Gold/EURUSD ↓.<br>";
-  if (usdDown > usdUp) text += "💵 USD weak → Gold/EURUSD ↑.<br>";
-
-  if (!text) text = "⚖️ Market neutral, no strong signals.";
-
-  document.getElementById("insight").innerHTML = text;
+// ===== FILTER =====
+function matchTab(title){
+  if(currentTab==="forex") return title.includes("eur") || title.includes("usd");
+  if(currentTab==="gold") return title.includes("gold") || title.includes("xau");
+  if(currentTab==="crypto") return title.includes("bitcoin") || title.includes("crypto");
+  return true;
 }
 
 // ===== NEWS =====
-async function fetchNews() {
-  const sources = [
-    "https://www.fxstreet.com/rss/news",
-    "https://www.forexlive.com/feed/"
-  ];
+async function fetchNews(){
+  const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://www.fxstreet.com/rss/news&_="+Date.now());
+  const data = await res.json();
 
-  let allNews = [];
+  generateInsight(data.items.map(n=>n.title.toLowerCase()));
 
-  for (let src of sources) {
-    try {
-      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${src}&_=${Date.now()}`);
-      const data = await res.json();
-      allNews = allNews.concat(data.items || []);
-    } catch {}
-  }
+  const container=document.getElementById("news");
+  container.innerHTML="";
 
-  allNews.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+  data.items.forEach(item=>{
+    const title=item.title.toLowerCase();
+    const time=new Date(item.pubDate);
 
-  generateInsight(allNews.map(n=>n.title).slice(0,20));
+    const isHigh = title.includes("cpi") || title.includes("nfp") || title.includes("fed");
 
-  let bullish=0, bearish=0, usdStrong=0, usdWeak=0;
+    if(showHighImpact && !isHigh) return;
+    if(!matchTab(title)) return;
 
-  const container = document.getElementById("news");
-  container.innerHTML = "";
+    const div=document.createElement("div");
+    div.className="news-card";
 
-  allNews.slice(0,20).forEach(item => {
+    if((new Date()-time)<120000) div.classList.add("breaking");
 
-    const title = item.title.toLowerCase();
-    const time = new Date(item.pubDate);
+    div.onclick=()=>window.open(item.link);
 
-    const isHigh =
-      title.includes("cpi") ||
-      title.includes("nfp") ||
-      title.includes("fed") ||
-      title.includes("inflation");
-
-    if (showHighImpact && !isHigh) return;
-
-    if (title.includes("inflation") || title.includes("rate hike")) bearish++;
-    if (title.includes("rate cut") || title.includes("stimulus")) bullish++;
-
-    if (title.includes("usd strength")) usdStrong++;
-    if (title.includes("usd weakness")) usdWeak++;
-
-    const div = document.createElement("div");
-    div.className = "card";
-
-    if ((new Date() - time) < 120000) div.classList.add("breaking");
-
-    div.onclick = () => window.open(item.link);
-
-    div.innerHTML = `
-      <img src="${item.thumbnail || 'https://via.placeholder.com/120'}">
+    div.innerHTML=`
+      <img src="${getImage(item)}">
       <div>
         <div class="title">${item.title}</div>
         <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
@@ -263,33 +260,24 @@ async function fetchNews() {
 
     container.appendChild(div);
   });
-
-  document.getElementById("bias").innerText =
-    bullish > bearish ? "Bullish 📈" :
-    bearish > bullish ? "Bearish 📉" : "Neutral";
-
-  document.getElementById("usd").innerText =
-    usdStrong > usdWeak ? "Strong 💪" :
-    usdWeak > usdStrong ? "Weak 📉" : "Neutral";
 }
 
 // ===== BREAKING =====
-async function fetchTweets() {
-  const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://nitter.net/financialjuice/rss&_="+Date.now());
-  const data = await res.json();
+async function fetchTweets(){
+  const res=await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://nitter.net/financialjuice/rss&_="+Date.now());
+  const data=await res.json();
 
-  const container = document.getElementById("tweets");
-  container.innerHTML = "";
+  const container=document.getElementById("tweets");
+  container.innerHTML="";
 
-  data.items.slice(0,6).forEach(item => {
-    const time = new Date(item.pubDate);
+  data.items.slice(0,6).forEach(item=>{
+    const time=new Date(item.pubDate);
 
-    const div = document.createElement("div");
-    div.className = "card";
+    const div=document.createElement("div");
+    div.className="news-card";
+    div.onclick=()=>window.open(item.link);
 
-    div.onclick = () => window.open(item.link);
-
-    div.innerHTML = `
+    div.innerHTML=`
       <div>
         <div class="title">${item.title}</div>
         <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
@@ -300,33 +288,14 @@ async function fetchTweets() {
   });
 }
 
-// ===== PRICES =====
-async function fetchPrices() {
-  const btc = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd");
-  const btcData = await btc.json();
-
-  const gold = await fetch("https://api.metals.live/v1/spot/gold");
-  const goldData = await gold.json();
-
-  const fx = await fetch("https://api.exchangerate.host/latest?base=EUR&symbols=USD");
-  const fxData = await fx.json();
-
-  document.getElementById("prices").innerHTML = `
-    <div class="price-box">🟡 Gold: $${goldData[0].price}</div>
-    <div class="price-box">₿ BTC: $${btcData.bitcoin.usd}</div>
-    <div class="price-box">💱 EURUSD: ${fxData.rates.USD}</div>
-  `;
-}
-
 // RUN
-function runAll() {
+function run(){
   fetchNews();
   fetchTweets();
-  fetchPrices();
 }
 
-runAll();
-setInterval(runAll, 20000);
+run();
+setInterval(run,20000);
 </script>
 
 </body>
