@@ -1,29 +1,25 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Market Dashboard</title>
-</head>
-<body>
-  <h1>🔥 Live Market News</h1>
-  <div id="news"></div>
+<script>
+async function fetchNews() {
+  const res = await fetch("https://api.allorigins.win/raw?url=https://rss.nytimes.com/services/xml/rss/nyt/Business.xml");
+  const text = await res.text();
 
-  <script>
-    async function fetchNews() {
-      const res = await fetch("https://newsapi.org/v2/everything?q=forex OR gold OR crypto OR usd&sortBy=publishedAt&apiKey=f92cf96542d94036929bcab39b6f9cdb");
-      const data = await res.json();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(text, "text/xml");
+  const items = xml.querySelectorAll("item");
 
-      const container = document.getElementById("news");
-      container.innerHTML = "";
+  const container = document.getElementById("news");
+  container.innerHTML = "";
 
-      data.articles.forEach(n => {
-        const div = document.createElement("div");
-        div.innerHTML = `<h3>${n.title}</h3><a href="${n.url}" target="_blank">Read</a>`;
-        container.appendChild(div);
-      });
-    }
+  items.forEach(item => {
+    const title = item.querySelector("title").textContent;
+    const link = item.querySelector("link").textContent;
 
-    fetchNews();
-    setInterval(fetchNews, 30000);
-  </script>
-</body>
-</html>
+    const div = document.createElement("div");
+    div.innerHTML = `<h3>${title}</h3><a href="${link}" target="_blank">Read</a>`;
+    container.appendChild(div);
+  });
+}
+
+fetchNews();
+setInterval(fetchNews, 30000);
+</script>
