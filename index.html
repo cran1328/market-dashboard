@@ -1,60 +1,86 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>INSTITUTIONAL DASHBOARD</title>
+  <title>Market Pro Dashboard</title>
 
   <style>
     body {
       margin: 0;
-      font-family: Arial;
-      background: #020617;
+      font-family: 'Segoe UI', sans-serif;
+      background: #0b1220;
       color: white;
     }
 
     header {
-      padding: 12px;
+      padding: 15px;
       text-align: center;
+      font-size: 20px;
       background: #020617;
       color: #38bdf8;
       font-weight: bold;
-      font-size: 20px;
     }
 
     .container {
       display: grid;
       grid-template-columns: 2fr 1fr;
-      gap: 10px;
-      padding: 10px;
+      gap: 15px;
+      padding: 15px;
     }
 
     .section {
       background: #111827;
-      padding: 10px;
-      border-radius: 10px;
-    }
-
-    .card {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 8px;
-      background: #1f2937;
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    .breaking {
-      background: #3b0a0a;
-      border-left: 3px solid red;
-    }
-
-    .time {
-      font-size: 11px;
-      color: #9ca3af;
+      padding: 12px;
+      border-radius: 12px;
     }
 
     .topbar {
       display: flex;
       justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .card {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      background: #1f2937;
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .card:hover {
+      transform: scale(1.02);
+      background: #374151;
+    }
+
+    .breaking {
+      border-left: 4px solid red;
+      background: #3b0a0a;
+    }
+
+    .card img {
+      width: 110px;
+      height: 75px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .time {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 4px;
+    }
+
+    .price {
       font-size: 13px;
       margin-bottom: 8px;
     }
@@ -64,11 +90,8 @@
       color: white;
       border: none;
       padding: 5px 8px;
-      border-radius: 5px;
-    }
-
-    .meter {
-      font-weight: bold;
+      border-radius: 6px;
+      margin-left: 5px;
     }
 
     @media (max-width: 768px) {
@@ -79,7 +102,7 @@
 
 <body>
 
-<header>🏦 INSTITUTIONAL MARKET DASHBOARD</header>
+<header>🚀 MARKET PRO DASHBOARD</header>
 
 <div class="container">
 
@@ -87,20 +110,26 @@
   <div class="section">
 
     <div class="topbar">
-      <div>🤖 Bias: <span id="bias">...</span></div>
-      <div>💵 USD: <span id="usd" class="meter">...</span></div>
-      <button onclick="toggleImpact()">🔥 Impact</button>
+      <div>🤖 <span id="bias">...</span></div>
+      <div>💵 <span id="usd">...</span></div>
+      <div>
+        <button onclick="toggleImpact()">🔥</button>
+        <button onclick="manualRefresh()">🔄</button>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:#9ca3af;">
+      Last updated: <span id="updated">--</span>
     </div>
 
     <div id="prices"></div>
-
     <div id="news"></div>
 
   </div>
 
   <!-- RIGHT -->
   <div class="section">
-    <h4>⚡ Breaking Feed</h4>
+    <h3>⚡ Breaking News</h3>
     <div id="tweets"></div>
   </div>
 
@@ -108,12 +137,25 @@
 
 <script>
 let showHighImpact = false;
-let lastNewsTime = 0;
-const sound = new Audio("https://actions.google.com/sounds/v1/alarms/beep_short.ogg");
 
 function toggleImpact() {
   showHighImpact = !showHighImpact;
   fetchNews();
+}
+
+function manualRefresh() {
+  fetchNews();
+  fetchTweets();
+  fetchPrices();
+}
+
+function formatTime(date) {
+  const now = new Date();
+  const diff = Math.floor((now - date) / 60000);
+
+  if (diff < 1) return "Just now 🔴";
+  if (diff < 60) return diff + " min ago";
+  return Math.floor(diff/60) + " hr ago";
 }
 
 // ===== NEWS =====
@@ -128,7 +170,7 @@ async function fetchNews() {
 
   for (let src of sources) {
     try {
-      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${src}`);
+      const res = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${src}&_=${Date.now()}`);
       const data = await res.json();
       if (data.items) allNews = allNews.concat(data.items);
     } catch {}
@@ -139,12 +181,9 @@ async function fetchNews() {
   const container = document.getElementById("news");
   container.innerHTML = "";
 
-  let bullish = 0;
-  let bearish = 0;
-  let usdStrong = 0;
-  let usdWeak = 0;
+  let bullish = 0, bearish = 0, usdStrong = 0, usdWeak = 0;
 
-  allNews.slice(0, 30).forEach(item => {
+  allNews.slice(0, 20).forEach(item => {
 
     const title = item.title.toLowerCase();
 
@@ -153,72 +192,72 @@ async function fetchNews() {
       title.includes("nfp") ||
       title.includes("fed") ||
       title.includes("inflation") ||
-      title.includes("interest rate") ||
-      title.includes("war");
+      title.includes("rate");
 
     if (showHighImpact && !isHigh) return;
 
     const time = new Date(item.pubDate);
-    const now = new Date();
-    const diffMin = Math.floor((now - time) / 60000);
 
-    let timeText = diffMin < 1 ? "🔴 NOW" :
-                   diffMin < 60 ? diffMin + "m" :
-                   Math.floor(diffMin/60) + "h";
+    if (title.includes("hawkish") || title.includes("inflation")) bearish++;
+    if (title.includes("dovish") || title.includes("stimulus")) bullish++;
 
-    if (time > lastNewsTime && diffMin < 1) {
-      sound.play().catch(()=>{});
-    }
-
-    // BIAS
-    if (title.includes("hawkish") || title.includes("inflation") || title.includes("rate hike")) bearish++;
-    if (title.includes("dovish") || title.includes("stimulus") || title.includes("rate cut")) bullish++;
-
-    // USD METER
-    if (title.includes("usd strength") || title.includes("strong dollar")) usdStrong++;
-    if (title.includes("usd weakness") || title.includes("weak dollar")) usdWeak++;
+    if (title.includes("usd strength")) usdStrong++;
+    if (title.includes("usd weakness")) usdWeak++;
 
     const div = document.createElement("div");
     div.className = "card";
 
-    if (diffMin < 2) div.classList.add("breaking");
+    if ((new Date() - time) < 120000) div.classList.add("breaking");
+
+    div.onclick = () => window.open(item.link, "_blank");
 
     div.innerHTML = `
+      <img src="${item.thumbnail || 'https://via.placeholder.com/110'}">
       <div>
-        <div>${item.title}</div>
-        <div class="time">${timeText}</div>
+        <div class="title">${item.title}</div>
+        <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
       </div>
     `;
 
     container.appendChild(div);
   });
 
-  lastNewsTime = new Date();
-
-  // Bias
   document.getElementById("bias").innerText =
     bearish > bullish ? "Bearish 📉" :
     bullish > bearish ? "Bullish 📈" : "Neutral";
 
-  // USD meter
   document.getElementById("usd").innerText =
-    usdStrong > usdWeak ? "Strong 💪" :
-    usdWeak > usdStrong ? "Weak 📉" : "Neutral";
+    usdStrong > usdWeak ? "USD Strong 💪" :
+    usdWeak > usdStrong ? "USD Weak 📉" : "USD Neutral";
+
+  document.getElementById("updated").innerText =
+    new Date().toLocaleTimeString();
 }
 
-// ===== TWITTER =====
+// ===== BREAKING =====
 async function fetchTweets() {
   try {
-    const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://nitter.net/financialjuice/rss");
+    const res = await fetch("https://api.rss2json.com/v1/api.json?rss_url=https://nitter.net/financialjuice/rss&_=" + Date.now());
     const data = await res.json();
 
     const container = document.getElementById("tweets");
     container.innerHTML = "";
 
     data.items.slice(0,6).forEach(item => {
+      const time = new Date(item.pubDate);
+
       const div = document.createElement("div");
       div.className = "card";
-      div.innerHTML = `<div>${item.title}</div>`;
+
+      div.onclick = () => window.open(item.link, "_blank");
+
+      div.innerHTML = `
+        <div>
+          <div class="title">${item.title}</div>
+          <div class="time">${time.toLocaleTimeString()} • ${formatTime(time)}</div>
+        </div>
+      `;
+
       container.appendChild(div);
     });
 
@@ -238,21 +277,19 @@ async function fetchPrices() {
     const fxData = await fx.json();
 
     document.getElementById("prices").innerHTML = `
-      🟡 Gold: $${goldData[0].price} |
-      ₿ BTC: $${btcData.bitcoin.usd} |
-      💱 EURUSD: ${fxData.rates.USD}
+      <div class="price">🟡 Gold: $${goldData[0].price}</div>
+      <div class="price">₿ BTC: $${btcData.bitcoin.usd}</div>
+      <div class="price">💱 EURUSD: ${fxData.rates.USD}</div>
     `;
   } catch {}
 }
 
 // RUN
-fetchNews();
-fetchTweets();
-fetchPrices();
+manualRefresh();
 
-setInterval(fetchNews, 20000);
-setInterval(fetchTweets, 15000);
-setInterval(fetchPrices, 20000);
+setInterval(() => {
+  manualRefresh();
+}, 20000);
 </script>
 
 </body>
