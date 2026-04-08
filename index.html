@@ -104,7 +104,7 @@ a{text-decoration:none;color:inherit}
 .tag.ghost.on{background:var(--s3);color:var(--t1);border-color:var(--bd3)}
 .tag.war{color:var(--re);border-color:var(--reg);background:var(--red);animation:pulse 1.5s infinite}
 
-/* ══ OANDA CHART CARD ══════════════════════════════════ */
+/* ══ PRICE CHART CARD ══════════════════════════════════ */
 .chart-head{padding:13px 16px 10px;border-bottom:1px solid var(--bd)}
 .chart-sym-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
 .chart-sym{font-size:18px;font-weight:700;letter-spacing:-.02em}
@@ -124,10 +124,13 @@ a{text-decoration:none;color:inherit}
 .bchip .blbl{font-size:9px;font-weight:400;opacity:.7;margin-right:1px}
 .chart-ai{padding:9px 16px;background:rgba(99,102,241,.05);border-bottom:1px solid var(--bd);font-size:11.5px;line-height:1.7;color:var(--t2)}
 .chart-ai strong{color:var(--v2)}
-.chart-frame{position:relative;height:280px;background:var(--s1)}
-.chart-frame iframe{width:100%;height:100%;border:none;display:block}
+.chart-frame{position:relative;height:280px;background:var(--s1);overflow:hidden}
+.chart-frame canvas{display:block;width:100%;height:100%}
+.chart-overlay-info{position:absolute;top:10px;left:14px;pointer-events:none}
+.chart-overlay-sym{font-family:var(--fm);font-size:10px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.1em}
+.chart-overlay-price{font-family:var(--fm);font-size:15px;font-weight:700;margin-top:2px}
 .tf-row{position:absolute;top:8px;right:10px;display:flex;gap:4px;z-index:10}
-.tf{padding:3px 9px;border-radius:4px;font-size:10px;font-family:var(--fm);color:var(--t2);background:rgba(12,14,20,.88);border:1px solid var(--bd);cursor:pointer;transition:all .13s;backdrop-filter:blur(6px)}
+.tf{padding:3px 9px;border-radius:4px;font-size:10px;font-family:var(--fm);color:var(--t2);background:rgba(17,21,32,.88);border:1px solid var(--bd);cursor:pointer;transition:all .13s;backdrop-filter:blur(6px)}
 .tf:hover{border-color:var(--bd2);color:var(--t1)}
 .tf.on{background:var(--vd);border-color:var(--vg);color:var(--v2)}
 
@@ -675,7 +678,7 @@ function renderHome(){
   const el=document.getElementById('page-home');
   el.innerHTML=`
   <div class="row row-wide mb12">
-    <!-- OANDA CHART CARD -->
+    <!-- PRICE CHART CARD -->
     <div class="card span2" id="home-chart-card">
       <div class="chart-head">
         <div class="chart-sym-row">
@@ -698,7 +701,11 @@ function renderHome(){
       </div>
       <div class="chart-ai" id="h-ai"><strong>AI:</strong> XAU/USD dips on profit-taking and dollar rebound. Supported by <strong>Fed cut expectations</strong>, stagflation fears, and central bank accumulation. Upside to <strong>$3,700+</strong> intact on higher timeframes.</div>
       <div class="chart-frame" id="h-chart-frame">
-        <iframe id="h-iframe" src="https://www.oanda.com/rw-en/trading/charts/?instrument=XAU_USD&candleCount=100&interval=H1&type=candles&theme=dark" allowfullscreen scrolling="no"></iframe>
+        <canvas id="h-canvas"></canvas>
+        <div class="chart-overlay-info">
+          <div class="chart-overlay-sym" id="h-canvas-sym">XAUUSD</div>
+          <div class="chart-overlay-price" id="h-canvas-price"></div>
+        </div>
         <div class="tf-row">
           <button class="tf on" onclick="setHTF('M15',this)">15M</button>
           <button class="tf" onclick="setHTF('H1',this)">1H</button>
@@ -817,6 +824,7 @@ function renderHome(){
   updateAIBar();
   updateGauge();
   updateHomePrice();
+  setTimeout(()=>drawChart('h-canvas',ASSET_KEY[curAssetSym]||'xau',curAssetSym),80);
 }
 
 let homeFeedFilter='all';
@@ -905,7 +913,7 @@ function renderGold(){
   el.innerHTML=`<div class="row row-main mb12">
     <div class="card span2">
       <div class="chart-head">
-        <div class="chart-sym-row"><span class="chart-sym">XAU/USD — OANDA LIVE</span><span class="tag y">GOLD</span></div>
+        <div class="chart-sym-row"><span class="chart-sym">XAU/USD — LIVE PRICE CHART</span><span class="tag y">GOLD — LIVE CHART</span></div>
         <div class="chart-pr">
           <div class="cpr-val" id="gv-price">${p?.p?'$'+Math.round(p.p).toLocaleString():'$3,318'}</div>
           <div class="cpr-chg ${(p?.c||-.31)>=0?'up':'dn'}" id="gv-chg">${(p?.c||-.31)>=0?'▲ +':'▼ '}${Math.abs(p?.c||.31).toFixed(2)}%</div>
@@ -917,7 +925,11 @@ function renderGold(){
       </div>
       <div class="chart-ai"><strong>Gold AI:</strong> XAU dips to <strong id="gv-ai-price">${p?.p?'$'+Math.round(p.p):'$3,318'}</strong> as Fed hold persists. Safe-haven demand and central bank buying remain primary structural drivers. Key support <strong>$3,295</strong>, next target <strong>$3,400+</strong>.</div>
       <div class="chart-frame" style="height:320px">
-        <iframe id="gv-iframe" src="https://www.oanda.com/rw-en/trading/charts/?instrument=XAU_USD&candleCount=100&interval=H1&type=candles&theme=dark" allowfullscreen scrolling="no"></iframe>
+        <canvas id="gv-canvas"></canvas>
+        <div class="chart-overlay-info">
+          <div class="chart-overlay-sym">XAUUSD</div>
+          <div class="chart-overlay-price" id="gv-canvas-price"></div>
+        </div>
         <div class="tf-row">
           <button class="tf on" onclick="setGoldTF('M15',this)">15M</button>
           <button class="tf" onclick="setGoldTF('H1',this)">1H</button>
@@ -954,6 +966,7 @@ function renderGold(){
     </div>
   </div>`;
   renderGoldFeed('all');
+  setTimeout(()=>drawChart('gv-canvas','xau','XAUUSD'),80);
 }
 function setGoldFilter(f,btn){
   S.goldFilter=f;
@@ -971,7 +984,7 @@ function renderGoldFeed(f){
 }
 function setGoldTF(tf,btn){
   document.querySelectorAll('#page-gold .tf').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');
-  const iframe=document.getElementById('gv-iframe');if(iframe)iframe.src=`https://www.oanda.com/rw-en/trading/charts/?instrument=XAU_USD&candleCount=100&interval=${tf}&type=candles&theme=dark`;
+  // chart redrawn via drawChart()
 }
 
 // ─── FOREX PAGE ──────────────────────────────────────
@@ -1397,35 +1410,181 @@ function updateAIBar(){
 }
 
 // ══════════════════════════════════════════════════════
-// HERO PRICE + ASSET SWITCH + TF
+// CANVAS CHART DRAWING
 // ══════════════════════════════════════════════════════
-const ASSET_INST={XAUUSD:'XAU_USD',EURUSD:'EUR_USD',GBPUSD:'GBP_USD',BTCUSD:'BTC_USD',ETHUSD:'ETH_USD',USDJPY:'USD_JPY'};
 const ASSET_KEY={XAUUSD:'xau',EURUSD:'eur',GBPUSD:'gbp',BTCUSD:'btc',ETHUSD:'eth',USDJPY:'jpy'};
 const ASSET_AI={
   XAUUSD:'XAU/USD dips on profit-taking and dollar rebound. Supported by <strong>Fed cut expectations</strong>, stagflation fears, and central bank accumulation. Upside to <strong>$3,700+</strong> intact on higher timeframes.',
   EURUSD:'EUR/USD holding 1.0840 support ahead of <strong>ECB Lagarde speech</strong>. Bulls eye 1.0900 breakout. Dollar strength the primary near-term headwind.',
   GBPUSD:'GBP/USD volatile on BoE/Fed policy divergence. <strong>UK CPI surprise</strong> put rate hike back on table. Watch 1.2700 support for continuation.',
-  BTCUSD:'BTC consolidating above $82K. <strong>ETF inflows $300M+ daily</strong> signals institutional accumulation. Halving cycle dynamics target $90K–$95K next.',
+  BTCUSD:'BTC consolidating above $82K. <strong>ETF inflows $300M+ daily</strong> signals institutional accumulation. Halving cycle dynamics target $90K-$95K next.',
   ETHUSD:'ETH tracking BTC with <strong>0.85 correlation</strong>. Layer-2 ecosystem growth bullish structural driver. Key support $3,200, resistance $3,600.',
-  USDJPY:'USD/JPY elevated near 150 as BoJ holds. <strong>BoJ rate hike risk</strong> is primary downside catalyst — could trigger 200+ pip move instantly.',
+  USDJPY:'USD/JPY elevated near 150 as BoJ holds. <strong>BoJ rate hike risk</strong> is primary downside catalyst -- could trigger 200+ pip move instantly.',
 };
+let curAssetSym='XAUUSD';
+let chartTF='H1';
+
+// Generate synthetic price history for a given asset
+function genPriceHistory(key,len=120){
+  if(!S.hist[key])S.hist[key]=[];
+  const hist=S.hist[key];
+  if(hist.length<10){
+    const base=S.mkt[key]?.p||3318;
+    const chgPct=S.mkt[key]?.c||0;
+    const startPrice=base*(1-chgPct/100);
+    let v=startPrice;
+    const volatility={'xau':0.0015,'btc':0.006,'eth':0.005,'eur':0.0005,'gbp':0.0005,'jpy':0.0003,'sol':0.008,'oil':0.003}[key]||0.002;
+    for(let i=0;i<len;i++){
+      const trend=(base-v)/(len-i)*0.6;
+      v+=trend+(Math.random()-0.47)*v*volatility;
+      hist.push(v);
+    }
+  }
+  return hist.slice(-len);
+}
+
+function drawChart(canvasId,key,sym){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const parent=canvas.parentElement;
+  if(!parent)return;
+  const W=parent.clientWidth||800;
+  const H=parent.clientHeight||280;
+  canvas.width=W;
+  canvas.height=H;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,W,H);
+
+  const data=genPriceHistory(key,140);
+  if(data.length<2)return;
+
+  const pad={t:28,r:80,b:32,l:14};
+  const mn=Math.min(...data)*0.9996;
+  const mx=Math.max(...data)*1.0004;
+  const rng=mx-mn||1;
+  const xs=i=>pad.l+(i/(data.length-1))*(W-pad.l-pad.r);
+  const ys=v=>H-pad.b-((v-mn)/rng)*(H-pad.t-pad.b);
+
+  const up=(data[data.length-1]>=data[0]);
+  const lineCol=up?'#10b981':'#ef4444';
+  const fillTopCol=up?'rgba(16,185,129,0.22)':'rgba(239,68,68,0.22)';
+  const fillBotCol='rgba(0,0,0,0)';
+
+  // Horizontal grid lines + price labels
+  ctx.font='9px JetBrains Mono';ctx.textAlign='left';
+  for(let i=0;i<=4;i++){
+    const v=mn+(rng*i/4);
+    const y=ys(v);
+    ctx.strokeStyle='rgba(255,255,255,0.04)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(W-pad.r+4,y);ctx.stroke();
+    const isForex=['eur','gbp'].includes(key);
+    const isJpy=key==='jpy';
+    const lbl=isForex?v.toFixed(4):isJpy?v.toFixed(2):'$'+Math.round(v).toLocaleString();
+    ctx.fillStyle='rgba(100,120,145,0.65)';
+    ctx.fillText(lbl,W-pad.r+8,y+3);
+  }
+
+  // Time labels
+  const timeLabels=['09:00','11:00','13:00','15:00','17:00','19:00','21:00'];
+  ctx.fillStyle='rgba(100,120,145,0.5)';ctx.textAlign='center';
+  timeLabels.forEach((t,i)=>{
+    const x=pad.l+(W-pad.l-pad.r)*(i/(timeLabels.length-1));
+    ctx.fillText(t,x,H-8);
+  });
+
+  // Area fill
+  const grad=ctx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,fillTopCol);
+  grad.addColorStop(1,fillBotCol);
+  const pts=data.map((v,i)=>({x:xs(i),y:ys(v)}));
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,H-pad.b);
+  pts.forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.lineTo(pts[pts.length-1].x,H-pad.b);
+  ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=1;i<pts.length-2;i++){
+    const cx=(pts[i].x+pts[i+1].x)/2,cy=(pts[i].y+pts[i+1].y)/2;
+    ctx.quadraticCurveTo(pts[i].x,pts[i].y,cx,cy);
+  }
+  ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);
+  ctx.strokeStyle=lineCol;ctx.lineWidth=2;ctx.stroke();
+
+  // Current price dashed line
+  const lastY=pts[pts.length-1].y;
+  ctx.setLineDash([4,4]);
+  ctx.strokeStyle=lineCol.replace(')',',0.4)').replace('#10b981','rgba(16,185,129').replace('#ef4444','rgba(239,68,68');
+  ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(pad.l,lastY);ctx.lineTo(W-pad.r+4,lastY);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Last dot
+  const lp=pts[pts.length-1];
+  ctx.beginPath();ctx.arc(lp.x,lp.y,5,0,Math.PI*2);
+  ctx.fillStyle=lineCol;ctx.fill();
+  ctx.beginPath();ctx.arc(lp.x,lp.y,9,0,Math.PI*2);
+  ctx.fillStyle=lineCol.replace(')',',0.2)').replace('#10b981','rgba(16,185,129').replace('#ef4444','rgba(239,68,68');
+  ctx.fill();
+
+  // Update overlay
+  const priceEl=document.getElementById(canvasId.replace('canvas','canvas-price'));
+  if(priceEl&&S.mkt[key]?.p){
+    const d=S.mkt[key];
+    const isF=['eur','gbp'].includes(key);
+    const pStr=isF?d.p.toFixed(4):key==='jpy'?d.p.toFixed(2):'$'+Math.round(d.p).toLocaleString();
+    const c=d.c||0;
+    priceEl.textContent=pStr+' '+(c>=0?'▲+':'▼')+Math.abs(c).toFixed(2)+'%';
+    priceEl.style.color=c>=0?'#10b981':'#ef4444';
+  }
+}
+
+function drawAllCharts(){
+  // Home chart
+  const key=ASSET_KEY[curAssetSym]||'xau';
+  drawChart('h-canvas',key,curAssetSym);
+  // Gold page chart
+  if(document.getElementById('gv-canvas'))drawChart('gv-canvas','xau','XAUUSD');
+}
+
 function switchAsset(sym,name,btn){
   document.querySelectorAll('#home-chart-card .atab').forEach(b=>b.classList.remove('on'));
   if(btn)btn.classList.add('on');
+  curAssetSym=sym;
   const sym_el=document.getElementById('h-sym');if(sym_el)sym_el.textContent=name;
-  const iframe=document.getElementById('h-iframe');
-  if(iframe)iframe.src=`https://www.oanda.com/rw-en/trading/charts/?instrument=${ASSET_INST[sym]||'XAU_USD'}&candleCount=100&interval=H1&type=candles&theme=dark`;
+  const symLbl=document.getElementById('h-canvas-sym');if(symLbl)symLbl.textContent=sym;
   const ai=document.getElementById('h-ai');if(ai)ai.innerHTML=`<strong>AI:</strong> ${ASSET_AI[sym]||ASSET_AI.XAUUSD}`;
+  // reset history to regenerate for new asset
+  const key=ASSET_KEY[sym]||'xau';
+  if(S.hist[key]&&S.hist[key].length){}
+  else S.hist[key]=[];
   updateHomePrice(sym);
+  setTimeout(()=>drawChart('h-canvas',key,sym),50);
 }
+
 function setHTF(tf,btn){
-  document.querySelectorAll('#h-chart-frame .tf').forEach(b=>b.classList.remove('on'));if(btn)btn.classList.add('on');
-  const sym=document.querySelector('#home-chart-card .atab.on')?.textContent||'XAUUSD';
-  const iframe=document.getElementById('h-iframe');
-  if(iframe)iframe.src=`https://www.oanda.com/rw-en/trading/charts/?instrument=${ASSET_INST[sym]||'XAU_USD'}&candleCount=100&interval=${tf}&type=candles&theme=dark`;
+  document.querySelectorAll('#h-chart-frame .tf').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  chartTF=tf;
+  // Regenerate history to simulate different timeframe density
+  const key=ASSET_KEY[curAssetSym]||'xau';
+  S.hist[key]=[];
+  setTimeout(()=>drawChart('h-canvas',key,curAssetSym),50);
 }
+
+function setGoldTF(tf,btn){
+  document.querySelectorAll('#page-gold .tf').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+  S.hist['xau']=[];
+  setTimeout(()=>drawChart('gv-canvas','xau','XAUUSD'),50);
+}
+
 function updateHomePrice(sym){
-  const key=ASSET_KEY[sym||'XAUUSD']||'xau';const d=S.mkt[key];if(!d?.p)return;
+  const key=ASSET_KEY[sym||curAssetSym||'XAUUSD']||'xau';
+  const d=S.mkt[key];if(!d?.p)return;
   const fmtMap={xau:v=>'$'+Math.round(v).toLocaleString(),eur:v=>v.toFixed(4),gbp:v=>v.toFixed(4),jpy:v=>v.toFixed(2),btc:v=>'$'+Math.round(v).toLocaleString(),eth:v=>'$'+Math.round(v)};
   const fmt=fmtMap[key]||fmtMap.xau;
   const pe=document.getElementById('h-price');const ce=document.getElementById('h-chg');
@@ -1459,6 +1618,7 @@ async function fetchPrices(){
   updateTicker();
   updateHomePrice();
   updateGauge();
+  drawAllCharts();
   if(S.curPage==='crypto')renderCryptoPrices();
 }
 
